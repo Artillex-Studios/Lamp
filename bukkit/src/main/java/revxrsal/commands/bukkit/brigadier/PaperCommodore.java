@@ -27,6 +27,7 @@ package revxrsal.commands.bukkit.brigadier;
 import com.destroystokyo.paper.event.brigadier.CommandRegisteredEvent;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import org.bukkit.Bukkit;
+import org.bukkit.Warning;
 import org.bukkit.command.Command;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.event.EventHandler;
@@ -40,6 +41,7 @@ import revxrsal.commands.bukkit.core.BukkitCommandExecutor;
 import revxrsal.commands.command.ArgumentStack;
 import revxrsal.commands.exception.ArgumentParseException;
 
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -65,7 +67,19 @@ final class PaperCommodore extends Commodore implements Listener {
     private void registerListener(Plugin plugin) {
         // Put each listener in a class, in case one of them fails due to incompatibility.
         Bukkit.getPluginManager().registerEvents(new UnknownCommandListener(), plugin);
-        Bukkit.getPluginManager().registerEvents(new CommandRegisterListener(), plugin);
+
+        // Suppress warning
+        try {
+            Warning.WarningState prevState = Bukkit.getWarningState();
+            Class<?> craftServer = Bukkit.getServer().getClass();
+            Field warningState = craftServer.getDeclaredField("warningState");
+            warningState.setAccessible(true);
+            warningState.set(Bukkit.getServer(), Warning.WarningState.OFF);
+            Bukkit.getPluginManager().registerEvents(new CommandRegisterListener(), plugin);
+            warningState.set(Bukkit.getServer(), prevState);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
     }
 
     public final class UnknownCommandListener implements Listener {
