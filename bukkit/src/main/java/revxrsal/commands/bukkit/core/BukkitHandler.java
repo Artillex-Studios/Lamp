@@ -23,6 +23,7 @@ import revxrsal.commands.autocomplete.SuggestionProvider;
 import revxrsal.commands.bukkit.BukkitBrigadier;
 import revxrsal.commands.bukkit.BukkitCommandActor;
 import revxrsal.commands.bukkit.BukkitCommandHandler;
+import revxrsal.commands.bukkit.Version;
 import revxrsal.commands.bukkit.adventure.AudienceSenderResolver;
 import revxrsal.commands.bukkit.adventure.ComponentResponseHandler;
 import revxrsal.commands.bukkit.brigadier.CommodoreBukkitBrigadier;
@@ -37,6 +38,7 @@ import revxrsal.commands.util.Primitives;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
@@ -98,11 +100,9 @@ public final class BukkitHandler extends BaseCommandHandler implements BukkitCom
         });
         registerValueResolver(OfflinePlayer.class, context -> {
             String value = context.pop();
-            if (value.equalsIgnoreCase("self") || value.equalsIgnoreCase("me"))
-                return ((BukkitCommandActor) context.actor()).requirePlayer();
-            OfflinePlayer player = Bukkit.getOfflinePlayer(value);
-            if (!player.hasPlayedBefore() && !player.isOnline() && player.getFirstPlayed() == 0L)
-                throw new InvalidPlayerException(context.parameter(), value);
+            if (value.equalsIgnoreCase("self") || value.equalsIgnoreCase("me")) return ((BukkitCommandActor) context.actor()).requirePlayer();
+            OfflinePlayer player = getCachedOfflinePlayer(value);
+            if (player == null && !(player = Bukkit.getOfflinePlayer(value)).hasPlayedBefore()) throw new InvalidPlayerException(context.parameter(), value);
             return player;
         });
         registerValueResolver(World.class, context -> {
@@ -266,6 +266,48 @@ public final class BukkitHandler extends BaseCommandHandler implements BukkitCom
             return (Map<String, Command>) KNOWN_COMMANDS.get(COMMAND_MAP);
         return null;
 
+    }
+
+
+
+    private static OfflinePlayer getCachedOfflinePlayer(String name) {
+        OfflinePlayer offlinePlayer = Bukkit.getPlayerExact(name);
+        if (offlinePlayer == null) {
+            try {
+                Method minecraftServer = Class.forName("net.minecraft.server.MinecraftServer").getDeclaredMethod("getServer");
+                minecraftServer.setAccessible(true);
+                Object serverInstance = minecraftServer.invoke(null);
+
+                Object gameProfileCache;
+                if (Version.getServerVersion() == Version.v1_18 || Version.getServerVersion() == Version.v1_18_2 || Version.getServerVersion() == Version.v1_19_2) {
+                    Method method = serverInstance.getClass().getDeclaredMethod("ao");
+                    method.setAccessible(true);
+                    gameProfileCache = method.invoke(serverInstance);
+                } else if (Version.getServerVersion() == Version.v1_19 || Version.getServerVersion() == Version.v1_19_1 || Version.getServerVersion() == Version.v1_19_3 || Version.getServerVersion() == Version.v1_20_1 || Version.getServerVersion() == Version.v1_20_2) {
+                    Method method = serverInstance.getClass().getDeclaredMethod("ap");
+                    method.setAccessible(true);
+                    gameProfileCache = method.invoke(serverInstance);
+                } else if (Version.getServerVersion() == Version.v1_20_3) {
+                    Method method = serverInstance.getClass().getDeclaredMethod("ar");
+                    method.setAccessible(true);
+                    gameProfileCache = method.invoke(serverInstance);
+                } else {
+                    Method method = serverInstance.getClass().getDeclaredMethod("au");
+                    method.setAccessible(true);
+                    gameProfileCache = method.invoke(serverInstance);
+                }
+
+
+                Object gameProfile = gameProfileCache.getClass().getDeclaredMethod("getProfileIfCached", String.class).invoke(gameProfileCache, name);
+                if (gameProfile != null) {
+                    return (OfflinePlayer) Bukkit.getServer().getClass().getDeclaredMethod("getOfflinePlayer", Class.forName("com.mojang.authlib.GameProfile")).invoke(Bukkit.getServer(), gameProfile);
+                }
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        }
+
+        return offlinePlayer;
     }
 
 }
