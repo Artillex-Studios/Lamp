@@ -56,7 +56,7 @@ public enum EntitySelectorResolver implements ValueResolverFactory {
     EntitySelectorResolver() {
         try {
             Bukkit.getServer().selectEntities(Bukkit.getConsoleSender(), "@a");
-            supportComplexSelectors = true;
+            supportComplexSelectors = false;
         } catch (Throwable t) {
             supportComplexSelectors = false;
         }
