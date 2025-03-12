@@ -291,12 +291,15 @@ public final class BukkitHandler extends BaseCommandHandler implements BukkitCom
                     Method method = serverInstance.getClass().getDeclaredMethod("ar");
                     method.setAccessible(true);
                     gameProfileCache = method.invoke(serverInstance);
+                } else if (Version.getServerVersion() == Version.v1_21_2 || Version.getServerVersion() == Version.v1_21_3) { {
+                    Method method = serverInstance.getClass().getDeclaredMethod("at");
+                    method.setAccessible(true);
+                    gameProfileCache = method.invoke(serverInstance);
                 } else {
                     Method method = serverInstance.getClass().getDeclaredMethod("au");
                     method.setAccessible(true);
                     gameProfileCache = method.invoke(serverInstance);
                 }
-
 
                 Object gameProfile = gameProfileCache.getClass().getDeclaredMethod("getProfileIfCached", String.class).invoke(gameProfileCache, name);
                 if (gameProfile != null) {
