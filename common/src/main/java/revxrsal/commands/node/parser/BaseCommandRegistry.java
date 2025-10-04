@@ -158,35 +158,56 @@ public final class BaseCommandRegistry<A extends CommandActor> implements Comman
     public void execute(@NotNull A actor, @NotNull StringStream input) {
         LinkedList<Potential<A>> conflicts = new LinkedList<>();
         LinkedList<Potential<A>> failed = new LinkedList<>();
+        String full = input.peekRemaining();
         String firstWord = input.peekUnquotedString();
-        x: for (ExecutableCommand<A> execution : children) {
+        System.out.println("FULL: " + full);
+
+        List<ExecutableCommand<A>> list = new ArrayList<>(children);
+        list.sort((Comparator<Object>) (o1, o2) -> {
+            ExecutableCommand<A> c1 = (ExecutableCommand<A>) o1;
+            ExecutableCommand<A> c2 = (ExecutableCommand<A>) o2;
+            return -Integer.compare(getLiteralsOnly(c1.path()).split(" ").length, getLiteralsOnly(c2.path()).split(" ").length);
+        });
+        System.out.println(list);
+        for (ExecutableCommand<A> execution : children) {
             // an easy way to exclude irrelevant nodes
             if (!execution.firstNode().name().equalsIgnoreCase(firstWord))
                 continue;
 
-            MutableStringStream in = input.toMutableCopy();
-            MutableStringStream copy = input.toMutableCopy();
-            int i = 1;
-            String secondFirst = copy.readUnquotedString();
-            System.out.println("First word: " + firstWord + " second first: " + secondFirst + " full: " + copy.source());
-            while (!copy.hasFinished()) {
-                String read = copy.readUnquotedString();
-                if (i >= execution.nodes().size()) {
-                    System.out.println("Skipping due to longer arguments!" + read);
-                    continue x;
+            String path = execution.path();
+            StringBuilder builder = new StringBuilder();
+            int requiredArgs = path.split(" ").length;
+            int maxArgs = requiredArgs;
+            boolean breaking = false;
+            for (String s : path.split("")) {
+                if (s.equals("[")) {
+                    requiredArgs--;
                 }
+                if (s.equals("<") || s.equals("[")) {
+                    breaking = true;
+                }
+                if (breaking) continue;
+                builder.append(s);
+            }
+            String realPath = builder.toString().trim();
 
-                CommandNode<A> aCommandNode = execution.nodes().get(i);
-                if (aCommandNode.isLiteral() && !aCommandNode.name().equals(read)) {
-                    System.out.println("Skipping due to mismatching literal! Read: " + read + " Expected: "+ aCommandNode.name());
-                    continue x;
-                }
-                i++;
+            System.out.println("REAL: " + path + " TRIMMED: " + realPath);
+            int args = full.split(" ").length;
+            System.out.println(String.format("args: %s requiredArgs: %s maxArgs: %s", args, requiredArgs, maxArgs));
+            if (!full.toLowerCase(Locale.ENGLISH).startsWith(realPath.toLowerCase(Locale.ENGLISH))) {
+                System.out.println("SKIP: 1");
+                continue;
             }
 
+            if (args > maxArgs) { // args < requiredArgs ||
+                System.out.println("SKIP: 2");
+                continue;
+            }
+
+            MutableStringStream in = input.toMutableCopy();
             Potential<A> potential = execution.test(actor, in);
 
-            if (conflicts.size() >= lamp.dispatcherSettings().maximumFailedAttempts())
+            if (conflicts.size() >= 1) // lamp.dispatcherSettings().maximumFailedAttempts()
                 break;
 
             if (potential.successful()) {
@@ -207,6 +228,17 @@ public final class BaseCommandRegistry<A extends CommandActor> implements Comman
         }
         Collections.sort(conflicts);
         conflicts.getFirst().execute();
+    }
+
+    private String getLiteralsOnly(String string) {
+        StringBuilder builder = new StringBuilder();
+        for (String s : string.split("")) {
+            if (s.equals("<") || s.equals("[")) {
+                break;
+            }
+            builder.append(s);
+        }
+        return builder.toString();
     }
 
     @Override public @NotNull @UnmodifiableView List<ExecutableCommand<A>> commands() {
