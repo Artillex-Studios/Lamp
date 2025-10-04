@@ -136,6 +136,7 @@ final class ByPaperEvents<A extends BukkitCommandActor> implements BukkitBrigadi
                 A actor = actorFactory.create(event.getSender(), lamp);
                 // This will automatically fail, we can then easily get the
                 // exception message and overwrite it.
+                System.out.println("Dispatched! " + event.getCommandLine());
                 lamp.dispatch(actor, input);
             }
         }

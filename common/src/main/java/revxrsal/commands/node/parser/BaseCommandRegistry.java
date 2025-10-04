@@ -143,6 +143,7 @@ public final class BaseCommandRegistry<A extends CommandActor> implements Comman
     @Override
     public void execute(@NotNull A actor, @NotNull ExecutableCommand<A> command, @NotNull MutableStringStream input) {
         Potential<A> potential = command.test(actor, input);
+        System.out.println("Executing directly!");
         if (potential.failed())
             potential.handleException();
         else
@@ -164,19 +165,20 @@ public final class BaseCommandRegistry<A extends CommandActor> implements Comman
                 continue;
 
             MutableStringStream in = input.toMutableCopy();
-            MutableStringStream copy = in.toMutableCopy();
+            MutableStringStream copy = input.toMutableCopy();
             int i = 1;
-            copy.readUnquotedString();
+            String secondFirst = copy.readUnquotedString();
+            System.out.println("First word: " + firstWord + " second first: " + secondFirst + " full: " + copy.source());
             while (!copy.hasFinished()) {
                 String read = copy.readUnquotedString();
-                if (i > execution.nodes().size()) {
+                if (i >= execution.nodes().size()) {
                     System.out.println("Skipping due to longer arguments!" + read);
                     continue x;
                 }
 
                 CommandNode<A> aCommandNode = execution.nodes().get(i);
                 if (aCommandNode.isLiteral() && !aCommandNode.name().equals(read)) {
-                    System.out.println("Skipping due to mismatching literal!" + read);
+                    System.out.println("Skipping due to mismatching literal! Read: " + read + " Expected: "+ aCommandNode.name());
                     continue x;
                 }
                 i++;

@@ -48,7 +48,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A utility class that allows to easily handle individual exceptions
@@ -98,7 +100,7 @@ import java.util.List;
  */
 public class RuntimeExceptionAdapter<A extends CommandActor> implements CommandExceptionHandler<A> {
 
-    private final List<CommandExceptionHandler<A>> handlers = new ArrayList<>();
+    private final Set<CommandExceptionHandler<A>> handlers = new HashSet<>();
 
     /**
      * Registers all {@link HandleException}-annotated methods to this
@@ -178,22 +180,33 @@ public class RuntimeExceptionAdapter<A extends CommandActor> implements CommandE
                 throw new IllegalArgumentException("Don't know how to handle parameter of type " + type + " for a @HandleException function (" + method + ")");
             }
         }
-        return (throwable, errorContext) -> {
-            for (HandlerPredicate<A> condition : conditions) {
-                if (!condition.test(throwable, errorContext))
-                    return;
+        return new CommandExceptionHandler<A>() {
+            @Override public void handleException(@NotNull Throwable throwable, @NotNull ErrorContext<A> errorContext) {
+                for (HandlerPredicate<A> condition : conditions) {
+                    if (!condition.test(throwable, errorContext))
+                        return;
+                }
+                Object[] arguments = new Object[parameters.length];
+                for (int i = 0; i < suppliers.length; i++) {
+                    HandlerParameterSupplier<A> supplier = suppliers[i];
+                    arguments[i] = supplier.supply(throwable, errorContext);
+                }
+                try {
+                    new Throwable().printStackTrace();
+                    method.invoke(RuntimeExceptionAdapter.this, arguments);
+                } catch (IllegalAccessException e) {
+                    sneakyThrow(e);
+                } catch (InvocationTargetException e) {
+                    sneakyThrow(e.getCause());
+                }
             }
-            Object[] arguments = new Object[parameters.length];
-            for (int i = 0; i < suppliers.length; i++) {
-                HandlerParameterSupplier<A> supplier = suppliers[i];
-                arguments[i] = supplier.supply(throwable, errorContext);
+
+            @Override public boolean equals(Object obj) {
+                return method.equals(obj);
             }
-            try {
-                method.invoke(this, arguments);
-            } catch (IllegalAccessException e) {
-                sneakyThrow(e);
-            } catch (InvocationTargetException e) {
-                sneakyThrow(e.getCause());
+
+            @Override public int hashCode() {
+                return method.hashCode();
             }
         };
     }
