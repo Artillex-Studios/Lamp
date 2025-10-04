@@ -31,9 +31,12 @@ import revxrsal.commands.exception.context.ErrorContext;
 import revxrsal.commands.node.CommandAction;
 import revxrsal.commands.node.ExecutionContext;
 import revxrsal.commands.parameter.ContextParameter;
+import revxrsal.commands.util.mutable.MutableBoolean;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class ReflectionAction<A extends CommandActor> implements CommandAction<A> {
 
@@ -52,15 +55,30 @@ public final class ReflectionAction<A extends CommandActor> implements CommandAc
             parameters.forEach((index, parameter) -> {
                 arguments[index] = parameter.get(context);
             });
+
+            MutableBoolean threw = new MutableBoolean(false);
             context.resolvedArguments().forEach((parameterName, value) -> {
-                context.lamp().validate(
-                        context.actor(),
-                        value,
-                        context.command().parameter(parameterName)
-                );
-                int index = function.parameter(parameterName).methodIndex();
-                arguments[index] = value;
+                if (threw.booleanValue()) {
+                    return;
+                }
+
+                try {
+                    context.lamp().validate(
+                            context.actor(),
+                            value,
+                            context.command().parameter(parameterName)
+                    );
+                    int index = function.parameter(parameterName).methodIndex();
+                    arguments[index] = value;
+                } catch (Throwable throwable) {
+                    context.lamp().handleException(throwable, ErrorContext.executingFunction(context));
+                    threw.set(true);
+                }
             });
+
+            if (threw.get()) {
+                return;
+            }
 
             Object result = function.call(arguments);
             if (result != null) {
@@ -73,6 +91,9 @@ public final class ReflectionAction<A extends CommandActor> implements CommandAc
         }
     }
 
+    void asd() throws Exception {
+        throw new Exception();
+    }
     void addContextParameter(CommandParameter parameter, ContextParameter<A, ?> contextParameter) {
         parameters.put(parameter.methodIndex(), context -> contextParameter.resolve(parameter, context));
     }

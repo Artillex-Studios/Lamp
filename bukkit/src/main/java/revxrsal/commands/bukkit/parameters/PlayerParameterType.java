@@ -57,15 +57,24 @@ public final class PlayerParameterType implements ParameterType<BukkitCommandAct
 
     private static @NotNull Player fromSelector(@NotNull CommandSender sender, @NotNull String selector) {
         try {
-            List<Entity> entityList = Bukkit.selectEntities(sender, selector);
-            if (entityList.isEmpty())
-                throw new EmptyEntitySelectorException(selector);
-            if (entityList.size() != 1)
-                throw new MoreThanOneEntityException(selector);
-            Entity entity = entityList.get(0);
-            if (!(entity instanceof Player))
-                throw new NonPlayerEntitiesException(selector);
-            Player player = (Player) entity;
+            Player player;
+            if (selector.contains("@")) {
+                List<Entity> entityList = Bukkit.selectEntities(sender, selector);
+                if (entityList.isEmpty())
+                    throw new EmptyEntitySelectorException(selector);
+                if (entityList.size() != 1)
+                    throw new MoreThanOneEntityException(selector);
+                Entity entity = entityList.get(0);
+                if (!(entity instanceof Player))
+                    throw new NonPlayerEntitiesException(selector);
+                player = (Player) entity;
+            } else {
+                player = Bukkit.getPlayer(selector);
+                if (player == null) {
+                    throw new InvalidPlayerException(selector);
+                }
+            }
+
             return player;
         } catch (IllegalArgumentException e) {
             throw new MalformedEntitySelectorException(selector, e.getCause().getMessage());

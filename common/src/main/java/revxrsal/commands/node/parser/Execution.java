@@ -349,19 +349,25 @@ final class Execution<A extends CommandActor> implements ExecutableCommand<A> {
                     return false;
                 }
             }
+
+            int realNodes = 0;
             for (CommandNode<A> node : execution.nodes) {
                 if (node instanceof ParameterNode<?, ?> && (((ParameterNode<?, ?>) node).isFlag() || ((ParameterNode<?, ?>) node).isSwitch())) {
                     ParameterNode<?, ?> p = (ParameterNode<?, ?>) node;
                     continue;
                 }
+
+                realNodes++;
                 if (!tryParse(node, input, context)) {
                     context.clearResolvedArguments();
                     return false;
                 }
             }
+
             if (!testConditions()) {
                 return false;
             }
+
             consumedAllInput = input.hasFinished();
             return true;
         }

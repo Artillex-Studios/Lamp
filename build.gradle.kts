@@ -1,5 +1,3 @@
-import com.vanniktech.maven.publish.SonatypeHost
-
 buildscript {
     repositories {
         mavenCentral()
@@ -12,11 +10,11 @@ buildscript {
 
 plugins {
     id("java")
-    id("com.vanniktech.maven.publish") version "0.29.0"
+    id("maven-publish")
 }
 
 group = "io.github.revxrsal"
-version = "4.0.0-rc.13"
+version = "4.0.0-rc.19"
 
 java {
     toolchain {
@@ -35,7 +33,7 @@ subprojects {
 
 
     if (!isExample)
-        apply(plugin = "com.vanniktech.maven.publish")
+        apply(plugin = "maven-publish")
 
     java {
         toolchain {
@@ -44,41 +42,53 @@ subprojects {
     }
 
     if (!isExample)
-        mavenPublishing {
-            coordinates(
-                groupId = group as String,
-                artifactId = "lamp.$name",
-                version = version as String
-            )
-            pom {
-                name.set("Lamp")
-                description.set("A modern annotation-driven commands framework for Java")
-                inceptionYear.set("2024")
-                url.set("https://github.com/Revxrsal/Lamp/")
-                licenses {
-                    license {
-                        name.set("MIT")
-                        url.set("https://mit-license.org/")
-                        distribution.set("https://mit-license.org/")
+        publishing {
+            publications {
+                create<MavenPublication>("maven") {
+                    groupId = group.toString()
+                    artifactId = "lamp.${project.name}"
+                    version = version.toString()
+
+                    from(components["java"])
+
+                    pom {
+                        name.set("Lamp")
+                        description.set("A modern annotation-driven commands framework for Java")
+                        inceptionYear.set("2024")
+                        url.set("https://github.com/Revxrsal/Lamp/")
+                        licenses {
+                            license {
+                                name.set("MIT")
+                                url.set("https://mit-license.org/")
+                                distribution.set("https://mit-license.org/")
+                            }
+                        }
+                        developers {
+                            developer {
+                                id.set("revxrsal")
+                                name.set("Revxrsal")
+                                url.set("https://github.com/Revxrsal/")
+                            }
+                        }
+                        scm {
+                            url.set("https://github.com/Revxrsal/Lamp/")
+                            connection.set("scm:git:git://github.com/Revxrsal/Lamp.git")
+                            developerConnection.set("scm:git:ssh://git@github.com/Revxrsal/Lamp.git")
+                        }
                     }
-                }
-                developers {
-                    developer {
-                        id.set("revxrsal")
-                        name.set("Revxrsal")
-                        url.set("https://github.com/Revxrsal/")
-                    }
-                }
-                scm {
-                    url.set("https://github.com/Revxrsal/Lamp/")
-                    connection.set("scm:git:git://github.com/Revxrsal/Lamp.git")
-                    developerConnection.set("scm:git:ssh://git@github.com/Revxrsal/Lamp.git")
                 }
             }
 
-            publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
-
-            signAllPublications()
+            repositories {
+                maven {
+                    name = "ArtillexStudios"
+                    url = uri("https://repo.artillex-studios.com/releases/")
+                    credentials(PasswordCredentials::class) {
+                        username = project.properties["maven_username"].toString()
+                        password = project.properties["maven_password"].toString()
+                    }
+                }
+            }
         }
 
 

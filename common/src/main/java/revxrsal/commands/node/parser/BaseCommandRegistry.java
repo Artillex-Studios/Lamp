@@ -37,6 +37,7 @@ import revxrsal.commands.command.ExecutableCommand;
 import revxrsal.commands.command.Potential;
 import revxrsal.commands.exception.UnknownCommandException;
 import revxrsal.commands.exception.context.ErrorContext;
+import revxrsal.commands.node.CommandNode;
 import revxrsal.commands.node.CommandRegistry;
 import revxrsal.commands.reflect.MethodCaller.BoundMethodCaller;
 import revxrsal.commands.reflect.MethodCallerFactory;
@@ -157,20 +158,40 @@ public final class BaseCommandRegistry<A extends CommandActor> implements Comman
         LinkedList<Potential<A>> conflicts = new LinkedList<>();
         LinkedList<Potential<A>> failed = new LinkedList<>();
         String firstWord = input.peekUnquotedString();
-        for (ExecutableCommand<A> execution : children) {
+        x: for (ExecutableCommand<A> execution : children) {
             // an easy way to exclude irrelevant nodes
             if (!execution.firstNode().name().equalsIgnoreCase(firstWord))
                 continue;
 
             MutableStringStream in = input.toMutableCopy();
+            MutableStringStream copy = in.toMutableCopy();
+            int i = 1;
+            copy.readUnquotedString();
+            while (!copy.hasFinished()) {
+                String read = copy.readUnquotedString();
+                if (i > execution.nodes().size()) {
+                    System.out.println("Skipping due to longer arguments!" + read);
+                    continue x;
+                }
+
+                CommandNode<A> aCommandNode = execution.nodes().get(i);
+                if (aCommandNode.isLiteral() && !aCommandNode.name().equals(read)) {
+                    System.out.println("Skipping due to mismatching literal!" + read);
+                    continue x;
+                }
+                i++;
+            }
+
             Potential<A> potential = execution.test(actor, in);
 
             if (conflicts.size() >= lamp.dispatcherSettings().maximumFailedAttempts())
                 break;
 
             if (potential.successful()) {
+                System.out.println("Potential conflict: " + execution.path());
                 conflicts.add(potential);
             } else {
+                System.out.println("Failed: " + execution.path());
                 failed.add(potential);
             }
         }
@@ -179,7 +200,7 @@ public final class BaseCommandRegistry<A extends CommandActor> implements Comman
                 lamp.handleException(new UnknownCommandException(firstWord), ErrorContext.unknownCommand(actor));
                 return;
             }
-            lamp.dispatcherSettings().failureHandler().handleFailedAttempts(actor, Collections.unmodifiableList(failed), input);
+            lamp.dispatcherSettings().failureHandler().handleFailedAttempts(actor, Collections.unmodifiableList(failed.subList(0, 1)), input);
             return;
         }
         Collections.sort(conflicts);
