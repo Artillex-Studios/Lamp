@@ -143,7 +143,7 @@ public final class BaseCommandRegistry<A extends CommandActor> implements Comman
     @Override
     public void execute(@NotNull A actor, @NotNull ExecutableCommand<A> command, @NotNull MutableStringStream input) {
         Potential<A> potential = command.test(actor, input);
-        System.out.println("Executing directly!");
+//        System.out.println("Executing directly!");
         if (potential.failed())
             potential.handleException();
         else
@@ -160,7 +160,7 @@ public final class BaseCommandRegistry<A extends CommandActor> implements Comman
         LinkedList<Potential<A>> failed = new LinkedList<>();
         String full = input.peekRemaining();
         String firstWord = input.peekUnquotedString();
-        System.out.println("FULL: " + full);
+//        System.out.println("FULL: " + full);
 
         List<ExecutableCommand<A>> list = new ArrayList<>(children);
         list.sort((Comparator<Object>) (o1, o2) -> {
@@ -168,7 +168,7 @@ public final class BaseCommandRegistry<A extends CommandActor> implements Comman
             ExecutableCommand<A> c2 = (ExecutableCommand<A>) o2;
             return -Integer.compare(getLiteralsOnly(c1.path()).split(" ").length, getLiteralsOnly(c2.path()).split(" ").length);
         });
-        System.out.println(list);
+//        System.out.println(list);
         for (ExecutableCommand<A> execution : children) {
             // an easy way to exclude irrelevant nodes
             if (!execution.firstNode().name().equalsIgnoreCase(firstWord))
@@ -191,16 +191,16 @@ public final class BaseCommandRegistry<A extends CommandActor> implements Comman
             }
             String realPath = builder.toString().trim();
 
-            System.out.println("REAL: " + path + " TRIMMED: " + realPath);
+//            System.out.println("REAL: " + path + " TRIMMED: " + realPath);
             int args = full.split(" ").length;
-            System.out.println(String.format("args: %s requiredArgs: %s maxArgs: %s", args, requiredArgs, maxArgs));
+//            System.out.println(String.format("args: %s requiredArgs: %s maxArgs: %s", args, requiredArgs, maxArgs));
             if (!full.toLowerCase(Locale.ENGLISH).startsWith(realPath.toLowerCase(Locale.ENGLISH))) {
-                System.out.println("SKIP: 1");
+//                System.out.println("SKIP: 1");
                 continue;
             }
 
             if (args > maxArgs) { // args < requiredArgs ||
-                System.out.println("SKIP: 2");
+//                System.out.println("SKIP: 2");
                 continue;
             }
 
@@ -211,10 +211,10 @@ public final class BaseCommandRegistry<A extends CommandActor> implements Comman
                 break;
 
             if (potential.successful()) {
-                System.out.println("Potential conflict: " + execution.path());
+//                System.out.println("Potential conflict: " + execution.path());
                 conflicts.add(potential);
             } else {
-                System.out.println("Failed: " + execution.path());
+//                System.out.println("Failed: " + execution.path());
                 failed.add(potential);
             }
         }

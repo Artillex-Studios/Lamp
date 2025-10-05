@@ -508,19 +508,19 @@ public final class Lamp<A extends CommandActor> {
     public void handleException(@NotNull Throwable throwable, @NotNull ErrorContext<A> errorContext) {
         notNull(throwable, "throwable");
         try {
-            new Throwable().printStackTrace();
+//            new Throwable().printStackTrace();
             if (throwable instanceof SelfHandledException) {
                 //noinspection unchecked
                 SelfHandledException<A> she = (SelfHandledException<A>) throwable;
-                System.out.println("Self handling");
+//                System.out.println("Self handling");
                 she.handle(errorContext);
             }
             if (throwable.getClass().isAnnotationPresent(ThrowableFromCommand.class)) {
-                System.out.println("Fromcommand");
+//                System.out.println("Fromcommand");
                 exceptionHandler.handleException(throwable, errorContext);
             } else {
                 dispatcherSettings.stackTraceSanitizer().sanitize(throwable);
-                System.out.println("handling sanitized");
+//                System.out.println("handling sanitized");
                 exceptionHandler.handleException(new CommandInvocationException(throwable), errorContext);
             }
         } catch (Throwable t) {
