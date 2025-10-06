@@ -274,39 +274,66 @@ public final class BukkitHandler extends BaseCommandHandler implements BukkitCom
         OfflinePlayer offlinePlayer = Bukkit.getPlayerExact(name);
         if (offlinePlayer == null) {
             try {
-                Method minecraftServer = Class.forName("net.minecraft.server.MinecraftServer").getDeclaredMethod("getServer");
+                Class<?> minecraftServerClass = Class.forName("net.minecraft.server.MinecraftServer");
+                Method minecraftServer = minecraftServerClass.getDeclaredMethod("getServer");
                 minecraftServer.setAccessible(true);
                 Object serverInstance = minecraftServer.invoke(null);
 
                 Object gameProfileCache;
-                if (Version.getServerVersion() == Version.v1_18 || Version.getServerVersion() == Version.v1_18_2 || Version.getServerVersion() == Version.v1_19_2) {
-                    Method method = serverInstance.getClass().getDeclaredMethod("ao");
-                    method.setAccessible(true);
-                    gameProfileCache = method.invoke(serverInstance);
-                } else if (Version.getServerVersion() == Version.v1_19 || Version.getServerVersion() == Version.v1_19_1 || Version.getServerVersion() == Version.v1_19_3 || Version.getServerVersion() == Version.v1_20_1 || Version.getServerVersion() == Version.v1_20_2) {
-                    Method method = serverInstance.getClass().getDeclaredMethod("ap");
-                    method.setAccessible(true);
-                    gameProfileCache = method.invoke(serverInstance);
-                } else if (Version.getServerVersion() == Version.v1_20_3) {
-                    Method method = serverInstance.getClass().getDeclaredMethod("ar");
-                    method.setAccessible(true);
-                    gameProfileCache = method.invoke(serverInstance);
-                } else if (Version.getServerVersion() == Version.v1_21_2 || Version.getServerVersion() == Version.v1_21_3) {
-                    Method method = serverInstance.getClass().getDeclaredMethod("at");
-                    method.setAccessible(true);
-                    gameProfileCache = method.invoke(serverInstance);
-                } else {
-                    Method method = serverInstance.getClass().getDeclaredMethod("au");
-                    method.setAccessible(true);
-                    gameProfileCache = method.invoke(serverInstance);
+                switch (Version.getServerVersion()) {
+                    case v1_20_1: case v1_20_2: {
+                        Method method = minecraftServerClass.getDeclaredMethod("ap");
+                        method.setAccessible(true);
+                        gameProfileCache = method.invoke(serverInstance);
+                        break;
+                    }
+                    case v1_20_3: {
+                        Method method = minecraftServerClass.getDeclaredMethod("ar");
+                        method.setAccessible(true);
+                        gameProfileCache = method.invoke(serverInstance);
+                        break;
+                    }
+                    case v1_20_4: case v1_21: {
+                        Method method = minecraftServerClass.getDeclaredMethod("au");
+                        method.setAccessible(true);
+                        gameProfileCache = method.invoke(serverInstance);
+                        break;
+                    }
+                    case v1_21_2: case v1_21_3: case v1_21_4: case v1_21_5: case v1_21_6: {
+                        Method method = minecraftServerClass.getDeclaredMethod("at");
+                        method.setAccessible(true);
+                        gameProfileCache = method.invoke(serverInstance);
+                    }
+                    default: {
+                        Method servicesMethod = minecraftServerClass.getDeclaredMethod("av");
+                        servicesMethod.setAccessible(true);
+                        Object services = servicesMethod.invoke(null);
+                        Class<?> servicesClass = Class.forName("net.minecraft.server.Services");
+                        // nameToIdCache
+                        Method nameToIdCacheGetterMethod = servicesClass.getDeclaredMethod("f");
+                        gameProfileCache = nameToIdCacheGetterMethod.invoke(services);
+                        break;
+                    }
                 }
 
-                Object gameProfile = gameProfileCache.getClass().getDeclaredMethod("getProfileIfCached", String.class).invoke(gameProfileCache, name);
-                if (gameProfile != null) {
-                    return (OfflinePlayer) Bukkit.getServer().getClass().getDeclaredMethod("getOfflinePlayer", Class.forName("com.mojang.authlib.GameProfile")).invoke(Bukkit.getServer(), gameProfile);
+                if (gameProfileCache == null) {
+                    return null;
                 }
+
+                if (Version.getServerVersion().isOlderThan(Version.v1_21_7)) {
+                    Object gameProfile = gameProfileCache.getClass().getDeclaredMethod("getProfileIfCached", String.class).invoke(gameProfileCache, name);
+                    if (gameProfile != null) {
+                        return (OfflinePlayer) Bukkit.getServer().getClass().getDeclaredMethod("getOfflinePlayer", Class.forName("com.mojang.authlib.GameProfile")).invoke(Bukkit.getServer(), gameProfile);
+                    }
+                } else {
+                    Object nameAndId = gameProfileCache.getClass().getDeclaredMethod("getIfCached", String.class).invoke(gameProfileCache, name);
+                    if (nameAndId != null) {
+                        return (OfflinePlayer) Bukkit.getServer().getClass().getDeclaredMethod("getOfflinePlayer", Class.forName("net.minecraft.server.players.NameAndId")).invoke(Bukkit.getServer(), nameAndId);
+                    }
+                }
+
             } catch (Exception exception) {
-                exception.printStackTrace();
+
             }
         }
 
