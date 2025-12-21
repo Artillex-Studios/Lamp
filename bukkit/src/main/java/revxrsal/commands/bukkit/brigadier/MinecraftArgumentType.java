@@ -49,6 +49,15 @@ public enum MinecraftArgumentType {
     ENTITY("ArgumentEntity", boolean.class, boolean.class),
 
     /**
+     * A selector, player name, or UUID.
+     * <p>
+     * Parameters:
+     * - boolean single
+     * - boolean playerOnly
+     */
+    ENTITY_PAPER("EntityArgument", boolean.class, boolean.class),
+
+    /**
      * A player, online or not. Can also use a selector, which may match one or more
      * players (but not entities).
      */

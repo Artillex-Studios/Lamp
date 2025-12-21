@@ -1,12 +1,13 @@
 package revxrsal.commands.bukkit;
 
-import org.bukkit.Bukkit;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.function.BooleanSupplier;
+
+import static revxrsal.commands.bukkit.brigadier.DefaultArgTypeResolvers.classExists;
 
 public enum Version {
+    v1_21_8_PAPER(774, "v1_21_R7_paper", Collections.singletonList("1.21.11"), Version::isPaper),
+    v1_21_8(774, "v1_21_R7", Collections.singletonList("1.21.11"), () -> !isPaper()),
     v1_21_7(773, "v1_21_R6", Arrays.asList("1.21.9", "1.21.10")),
     v1_21_6(772, "v1_21_R5", Arrays.asList("1.21.7", "1.21.8")),
     v1_21_5(771, "v1_21_R5", Collections.singletonList("1.21.6")),
@@ -27,50 +28,101 @@ public enum Version {
     v1_17_1(756, "v1_17_R2", Collections.singletonList("1.17.1")),
     v1_17(755, "v1_17_R1", Collections.singletonList("1.17")),
     v1_16_5(754, "v1_16_R3", Collections.singletonList("1.16.5")),
+    FUTURE_RELEASE(Integer.MAX_VALUE, "FUTURE_RELEASE", Collections.singletonList("FUTURE_RELEASE")),
     UNKNOWN(-1, "UNKNOWN", Collections.singletonList("UNKNOWN"));
 
-    private static final HashMap<Integer, Version> versionMap = new HashMap<>();
+    private static final Map<Integer, Version> versionMap = new HashMap<>();
     private static Version serverVersion;
+    private static int protocolVersion;
 
     static {
-        final String serverVersion = Bukkit.getServer().getBukkitVersion().split("-")[0];
+        final FastMethodInvoker methodInvoker = ExceptionUtils.orElse(
+                () -> FastMethodInvoker.createSilently("net.minecraft.SharedConstants", "c"),
+                () -> FastMethodInvoker.createSilently("net.minecraft.SharedConstants", "getProtocolVersion"),
+                exception -> {
+                    return null;
+                });
 
-        for (Version value : values()) {
-            versionMap.put(value.protocolId, value);
-
-            if (value.versions.contains(serverVersion)) {
-                Version.serverVersion = value;
-            }
-        }
-
-        if (Version.serverVersion == null) {
+        if (methodInvoker == null) {
             Version.serverVersion = UNKNOWN;
+        } else {
+            final int protocolVersion = methodInvoker.invoke(null);
+
+            for (Version value : values()) {
+                if (!value.supplier.getAsBoolean()) {
+                    continue;
+                }
+
+                versionMap.put(value.protocolId, value);
+
+                if (value.protocolId == protocolVersion) {
+                    Version.serverVersion = value;
+                    break;
+                }
+            }
+
+            if (Version.serverVersion == null) {
+                Version.serverVersion = UNKNOWN;
+            }
+
+            Version.protocolVersion = protocolVersion;
         }
     }
 
-    public final List<String> versions;
-    public final int protocolId;
-    public final String nmsVersion;
 
-    Version(int protocolId, String nmsVersion, List<String> versions) {
+    public static boolean isPaper() {
+        return classExists("io.papermc.paper.configuration.Configuration") || classExists("com.destroystokyo.paper.PaperConfig");
+    }
+
+    private final List<String> versions;
+    private final int protocolId;
+    private final String nmsVersion;
+    private final BooleanSupplier supplier; // If the version is allowed in this environment
+
+    Version(int protocolId, String nmsVersion, List<String> versions, BooleanSupplier supplier) {
         this.protocolId = protocolId;
         this.versions = versions;
         this.nmsVersion = nmsVersion;
+        this.supplier = supplier;
+    }
+
+    Version(int protocolId, String nmsVersion, List<String> versions) {
+        this(protocolId, nmsVersion, versions, () -> true);
     }
 
     public static Version getServerVersion() {
         return serverVersion;
     }
 
+    public static int getProtocolVersion() {
+        return protocolVersion;
+    }
+
     public boolean isNewerThan(Version version) {
-        return protocolId > version.protocolId;
+        return this.protocolId > version.protocolId;
     }
 
     public boolean isNewerThanOrEqualTo(Version version) {
-        return protocolId >= version.protocolId;
+        return this.protocolId >= version.protocolId;
     }
 
     public boolean isOlderThan(Version version) {
-        return protocolId < version.protocolId;
+        return this.protocolId < version.protocolId;
+    }
+
+    public boolean isOlderThanOrEqualTo(Version version) {
+        return this.protocolId <= version.protocolId;
+    }
+
+    public List<String> getVersions() {
+        return this.versions;
+    }
+
+    public int getProtocolId() {
+        return this.protocolId;
+    }
+
+    public String getNMSVersion() {
+        return this.nmsVersion;
     }
 }

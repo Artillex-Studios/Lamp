@@ -25,10 +25,13 @@ package revxrsal.commands.bukkit.brigadier;
 
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.BoolArgumentType;
+import org.apache.commons.lang.ClassUtils;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import revxrsal.commands.annotation.Range;
+import revxrsal.commands.bukkit.Version;
 import revxrsal.commands.bukkit.core.BukkitHandler;
 import revxrsal.commands.util.Primitives;
 
@@ -44,7 +47,7 @@ import static revxrsal.commands.util.Preconditions.coerceAtMost;
 /**
  * Contains default argument type resolvers for Bukkit
  */
-final class DefaultArgTypeResolvers {
+public final class DefaultArgTypeResolvers {
 
     private DefaultArgTypeResolvers() {}
 
@@ -100,7 +103,16 @@ final class DefaultArgTypeResolvers {
         return MULTI_ENTITY;
     };
 
+    public static boolean classExists(String className) {
+        try {
+            Class.forName(className);
+            return true;
+        } catch (ClassNotFoundException exception) {
+            return false;
+        }
+    }
+
     private static ArgumentType<?> entity(boolean single, boolean playerOnly) {
-        return MinecraftArgumentType.ENTITY.create(single, playerOnly);
+        return Version.getServerVersion() == Version.v1_21_8_PAPER ? MinecraftArgumentType.ENTITY_PAPER.create(single, playerOnly) : MinecraftArgumentType.ENTITY.create(single, playerOnly);
     }
 }
