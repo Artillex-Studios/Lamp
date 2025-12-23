@@ -59,7 +59,11 @@ final class BrigadierUtil {
                 else
                     commandListenerWrapper = BukkitVersion.findNmsClass("CommandListenerWrapper");
             } catch (Exception e) {
-                commandListenerWrapper = Class.forName("net.minecraft.commands.CommandListenerWrapper");
+                try {
+                    commandListenerWrapper = Class.forName("net.minecraft.commands.CommandListenerWrapper");
+                } catch (Exception exception) {
+                    commandListenerWrapper = Class.forName("net.minecraft.commands.CommandSourceStack");
+                }
             }
 
             CHILDREN_FIELD = CommandNode.class.getDeclaredField("children");
