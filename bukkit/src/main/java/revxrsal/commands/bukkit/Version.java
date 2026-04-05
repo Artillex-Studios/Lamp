@@ -3,8 +3,6 @@ package revxrsal.commands.bukkit;
 import java.util.*;
 import java.util.function.BooleanSupplier;
 
-import static revxrsal.commands.bukkit.brigadier.DefaultArgTypeResolvers.classExists;
-
 public enum Version {
     v26_1(775, "v26_1", Arrays.asList("26.1", "26.1.1")),
     v1_21_8_PAPER(774, "v1_21_R7_paper", Collections.singletonList("1.21.11"), Version::isPaper),
@@ -73,6 +71,15 @@ public enum Version {
 
     public static boolean isPaper() {
         return classExists("io.papermc.paper.configuration.Configuration") || classExists("com.destroystokyo.paper.PaperConfig");
+    }
+
+    public static boolean classExists(String className) {
+        try {
+            Class.forName(className);
+            return true;
+        } catch (ClassNotFoundException exception) {
+            return false;
+        }
     }
 
     private final List<String> versions;

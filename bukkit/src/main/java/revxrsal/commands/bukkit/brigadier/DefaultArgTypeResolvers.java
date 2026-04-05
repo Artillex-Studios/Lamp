@@ -103,15 +103,6 @@ public final class DefaultArgTypeResolvers {
         return MULTI_ENTITY;
     };
 
-    public static boolean classExists(String className) {
-        try {
-            Class.forName(className);
-            return true;
-        } catch (ClassNotFoundException exception) {
-            return false;
-        }
-    }
-
     private static ArgumentType<?> entity(boolean single, boolean playerOnly) {
         return Version.getServerVersion() == Version.v1_21_8_PAPER || Version.getServerVersion().isNewerThanOrEqualTo(Version.v26_1) ? MinecraftArgumentType.ENTITY_PAPER.create(single, playerOnly) : MinecraftArgumentType.ENTITY.create(single, playerOnly);
     }
