@@ -113,6 +113,6 @@ public final class DefaultArgTypeResolvers {
     }
 
     private static ArgumentType<?> entity(boolean single, boolean playerOnly) {
-        return Version.getServerVersion() == Version.v1_21_8_PAPER ? MinecraftArgumentType.ENTITY_PAPER.create(single, playerOnly) : MinecraftArgumentType.ENTITY.create(single, playerOnly);
+        return Version.getServerVersion() == Version.v1_21_8_PAPER || Version.getServerVersion().isNewerThanOrEqualTo(Version.v26_1) ? MinecraftArgumentType.ENTITY_PAPER.create(single, playerOnly) : MinecraftArgumentType.ENTITY.create(single, playerOnly);
     }
 }

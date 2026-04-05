@@ -27,6 +27,7 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import revxrsal.commands.bukkit.Version;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
@@ -382,7 +383,7 @@ public enum MinecraftArgumentType {
 
     private static @Nullable Class<?> resolveArgumentClass(String name) {
         try {
-            if (BukkitVersion.supports(1, 16)) {
+            if (Version.getServerVersion().isNewerThanOrEqualTo(Version.v1_16_5)) {
                 try {
                     return BukkitVersion.findNmsClass("commands.arguments." + name);
                 } catch (Throwable ignored) {

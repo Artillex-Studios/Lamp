@@ -6,6 +6,7 @@ import java.util.function.BooleanSupplier;
 import static revxrsal.commands.bukkit.brigadier.DefaultArgTypeResolvers.classExists;
 
 public enum Version {
+    v26_1(775, "v26_1", Arrays.asList("26.1", "26.1.1")),
     v1_21_8_PAPER(774, "v1_21_R7_paper", Collections.singletonList("1.21.11"), Version::isPaper),
     v1_21_8(774, "v1_21_R7", Collections.singletonList("1.21.11"), () -> !isPaper()),
     v1_21_7(773, "v1_21_R6", Arrays.asList("1.21.9", "1.21.10")),

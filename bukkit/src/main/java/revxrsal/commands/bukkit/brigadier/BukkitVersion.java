@@ -4,6 +4,7 @@ import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.jetbrains.annotations.NotNull;
+import revxrsal.commands.bukkit.Version;
 
 import java.util.regex.Pattern;
 
@@ -120,7 +121,7 @@ final class BukkitVersion {
      */
     @SneakyThrows
     public static @NotNull Class<?> findNmsClass(@NotNull String name) {
-        if (supports(1, UNVERSION_NMS)) {
+        if (Version.getServerVersion().isNewerThanOrEqualTo(Version.v1_17)) {
             return Class.forName("net.minecraft.server." + name);
         }
         return Class.forName("net.minecraft.server." + VERSION + "." + name);
@@ -153,7 +154,7 @@ final class BukkitVersion {
      * @return if brigadier is supported or not
      */
     public static boolean isBrigadierSupported() {
-        if (supports(1, 19, 1))
+        if (Version.getServerVersion().isNewerThanOrEqualTo(Version.v1_19_1))
             return isPaper();
         else
             return supports(1, 13);

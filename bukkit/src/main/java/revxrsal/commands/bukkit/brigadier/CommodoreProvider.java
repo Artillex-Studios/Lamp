@@ -26,6 +26,7 @@
 package revxrsal.commands.bukkit.brigadier;
 
 import revxrsal.commands.bukkit.BukkitCommandHandler;
+import revxrsal.commands.bukkit.Version;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -50,10 +51,10 @@ public final class CommodoreProvider {
         }
 
         if (isPaper()) {
-            if (supports(1, 20, 6)) {
+            if (Version.getServerVersion().isNewerThanOrEqualTo(Version.v1_20_4)) {
                 return plugin -> new PaperLifecycleEvents(plugin);
             }
-            if (supports(1, 19)) {
+            if (Version.getServerVersion().isNewerThanOrEqualTo(Version.v1_19)) {
                 return plugin -> new PaperCommodore(plugin);
             }
         }

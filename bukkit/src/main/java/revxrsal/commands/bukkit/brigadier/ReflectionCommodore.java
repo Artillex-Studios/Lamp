@@ -38,6 +38,7 @@ import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.Plugin;
 import revxrsal.commands.bukkit.BukkitCommandHandler;
+import revxrsal.commands.bukkit.Version;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -57,14 +58,14 @@ final class ReflectionCommodore extends Commodore {
 
     static {
         try {
-            if (BukkitVersion.supports(1, 19)) {
+            if (Version.getServerVersion().isNewerThanOrEqualTo(Version.v1_19)) {
                 throw new UnsupportedOperationException("ReflectionCommodore is not supported on MC 1.19 or above. Switch to Paper :)");
             }
 
             final Class<?> minecraftServer;
             final Class<?> commandDispatcher;
 
-            if (BukkitVersion.supports(1, 16)) {
+            if (Version.getServerVersion().isNewerThanOrEqualTo(Version.v1_16_5)) {
                 minecraftServer = BukkitVersion.findNmsClass("server.MinecraftServer");
                 commandDispatcher = BukkitVersion.findNmsClass("commands.CommandDispatcher");
             } else {

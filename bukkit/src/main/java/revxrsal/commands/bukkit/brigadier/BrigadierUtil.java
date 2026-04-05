@@ -28,6 +28,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
+import revxrsal.commands.bukkit.Version;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -54,7 +55,7 @@ final class BrigadierUtil {
         try {
             Class<?> commandListenerWrapper;
             try {
-                if (BukkitVersion.supports(1, 16))
+                if (Version.getServerVersion().isNewerThan(Version.v1_16_5))
                     commandListenerWrapper = BukkitVersion.findNmsClass("commands.CommandListenerWrapper");
                 else
                     commandListenerWrapper = BukkitVersion.findNmsClass("CommandListenerWrapper");
