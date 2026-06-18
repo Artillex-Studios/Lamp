@@ -101,9 +101,11 @@ public final class BukkitHandler extends BaseCommandHandler implements BukkitCom
         registerValueResolver(OfflinePlayer.class, context -> {
             String value = context.pop();
             if (value.equalsIgnoreCase("self") || value.equalsIgnoreCase("me")) return ((BukkitCommandActor) context.actor()).requirePlayer();
-            OfflinePlayer player = getCachedOfflinePlayer(value);
-            if (player == null && !(player = Bukkit.getOfflinePlayer(value)).hasPlayedBefore()) throw new InvalidPlayerException(context.parameter(), value);
-            return player;
+            Player player = Bukkit.getPlayerExact(value);
+            if (player != null) return player;
+            OfflinePlayer offlinePlayer = getCachedOfflinePlayer(value);
+            if (offlinePlayer == null && !(offlinePlayer = Bukkit.getOfflinePlayer(value)).hasPlayedBefore()) throw new InvalidPlayerException(context.parameter(), value);
+            return offlinePlayer;
         });
         registerValueResolver(World.class, context -> {
             String value = context.pop();
