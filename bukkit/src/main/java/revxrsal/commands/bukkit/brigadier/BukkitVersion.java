@@ -2,7 +2,6 @@ package revxrsal.commands.bukkit.brigadier;
 
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
-import org.bukkit.Server;
 import org.jetbrains.annotations.NotNull;
 import revxrsal.commands.bukkit.Version;
 
@@ -14,14 +13,14 @@ import java.util.regex.Pattern;
  */
 final class BukkitVersion {
 
-    private static final boolean IS_PAPER;
-
-    private static final int MAJOR_VERSION, MINOR_VERSION, PATCH_NUMBER;
+//    private static final boolean IS_PAPER;
+//
+//    private static final int MAJOR_VERSION, MINOR_VERSION, PATCH_NUMBER;
 
     /**
      * The current version string, for example 1_17_R1
      */
-    private static final String VERSION = fetchVersion();
+//    private static final String VERSION = Version.getServerVersion().getNMSVersion();
 
     /**
      * The version where NMS no longer uses versions in the package names
@@ -44,14 +43,14 @@ final class BukkitVersion {
 
         if (version.length == 2)
             version = new String[]{version[0], version[1], "0"};
-        MAJOR_VERSION = Integer.parseInt(version[0]);
-        MINOR_VERSION = Integer.parseInt(version[1]);
+//        MAJOR_VERSION = Integer.parseInt(version[0]);
+//        MINOR_VERSION = Integer.parseInt(version[1]);
         String minorSlice = version[2];
         if (minorSlice.indexOf('-') != -1)
             minorSlice = minorSlice.substring(0, minorSlice.indexOf('-'));
-        PATCH_NUMBER = Integer.parseInt(minorSlice);
-
-        IS_PAPER = isClassPresent("com.destroystokyo.paper.PaperConfig");
+//        PATCH_NUMBER = Integer.parseInt(minorSlice);
+//
+//        IS_PAPER = isClassPresent("com.destroystokyo.paper.PaperConfig");
     }
 
     private BukkitVersion() {
@@ -62,38 +61,38 @@ final class BukkitVersion {
      *
      * @return The server version
      */
-    private static @NotNull String fetchVersion() {
-        Server server = Bukkit.getServer();
-        try {
-            String packageName = server.getClass().getPackage().getName();
-            return packageName.substring(packageName.lastIndexOf('.') + 1);
-        } catch (Throwable throwable) {
-            return "";
-        }
-    }
+//    private static @NotNull String fetchVersion() {
+//        Server server = Bukkit.getServer();
+//        try {
+//            String packageName = server.getClass().getPackage().getName();
+//            return packageName.substring(packageName.lastIndexOf('.') + 1);
+//        } catch (Throwable throwable) {
+//            return "";
+//        }
+//    }
 
     /**
      * Tests whether is the given version supported by this server
      */
-    public static boolean supports(int major, int minor) {
-        return supports(major, minor, 0);
-    }
+//    public static boolean supports(int major, int minor) {
+//        return supports(major, minor, 0);
+//    }
 
     /**
      * Tests whether is the given version supported by this server
      */
-    public static boolean supports(int major, int minor, int patch) {
-        if (MAJOR_VERSION > major) {
-            return true;
-        } else if (MAJOR_VERSION == major) {
-            if (MINOR_VERSION > minor) {
-                return true;
-            } else if (MINOR_VERSION == minor) {
-                return PATCH_NUMBER >= patch;
-            }
-        }
-        return false;
-    }
+//    public static boolean supports(int major, int minor, int patch) {
+//        if (MAJOR_VERSION > major) {
+//            return true;
+//        } else if (MAJOR_VERSION == major) {
+//            if (MINOR_VERSION > minor) {
+//                return true;
+//            } else if (MINOR_VERSION == minor) {
+//                return PATCH_NUMBER >= patch;
+//            }
+//        }
+//        return false;
+//    }
 
     /**
      * Returns the major version for the current server. For example,
@@ -101,9 +100,9 @@ final class BukkitVersion {
      *
      * @return The current version.
      */
-    public static int minorVersion() {
-        return MINOR_VERSION;
-    }
+//    public static int minorVersion() {
+//        return MINOR_VERSION;
+//    }
 
     /**
      * Returns the patch number for the current server. For example,
@@ -111,9 +110,9 @@ final class BukkitVersion {
      *
      * @return The current version.
      */
-    public static int patchNumber() {
-        return PATCH_NUMBER;
-    }
+//    public static int patchNumber() {
+//        return PATCH_NUMBER;
+//    }
 
     /**
      * Returns the NMS class with the given name. The name must not contain
@@ -121,10 +120,7 @@ final class BukkitVersion {
      */
     @SneakyThrows
     public static @NotNull Class<?> findNmsClass(@NotNull String name) {
-        if (Version.getServerVersion().isNewerThanOrEqualTo(Version.v1_17)) {
-            return Class.forName("net.minecraft.server." + name);
-        }
-        return Class.forName("net.minecraft.server." + VERSION + "." + name);
+        return Class.forName("net.minecraft.server." + name);
     }
 
     /**
@@ -145,7 +141,7 @@ final class BukkitVersion {
      * @return If this is PaperSpigot
      */
     public static boolean isPaper() {
-        return IS_PAPER;
+        return Version.isPaper();
     }
 
     /**
@@ -153,12 +149,12 @@ final class BukkitVersion {
      *
      * @return if brigadier is supported or not
      */
-    public static boolean isBrigadierSupported() {
-        if (Version.getServerVersion().isNewerThanOrEqualTo(Version.v1_19_1))
-            return isPaper();
-        else
-            return supports(1, 13);
-    }
+//    public static boolean isBrigadierSupported() {
+//        if (Version.getServerVersion().isNewerThanOrEqualTo(Version.v1_19_1))
+//            return isPaper();
+//        else
+//            return supports(1, 13);
+//    }
 
     private static boolean isClassPresent(String name) {
         try {

@@ -46,10 +46,6 @@ public final class CommodoreProvider {
 
     @SuppressWarnings("Convert2MethodRef")
     private static Function<BukkitCommandHandler, Commodore> checkSupported() {
-        if (!isBrigadierSupported()) {
-            return null;
-        }
-
         if (isPaper()) {
             if (Version.getServerVersion().isNewerThanOrEqualTo(Version.v1_20_4)) {
                 return plugin -> new PaperLifecycleEvents(plugin);
