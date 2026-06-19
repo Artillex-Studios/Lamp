@@ -263,7 +263,7 @@ public final class BukkitHandler extends BaseCommandHandler implements BukkitCom
         return (Class<? extends Entity>) Primitives.getInsideGeneric(selectorType, Entity.class);
     }
 
-    @SneakyThrows private static @Nullable Map<String, Command> getKnownCommands() {
+    @SneakyThrows public static @Nullable Map<String, Command> getKnownCommands() {
         if (KNOWN_COMMANDS != null)
             return (Map<String, Command>) KNOWN_COMMANDS.get(COMMAND_MAP);
         return null;
