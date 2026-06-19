@@ -54,6 +54,9 @@ public final class CommodoreProvider {
                 return plugin -> new PaperCommodore(plugin);
             }
         }
+        if (Version.getServerVersion().isNewerThanOrEqualTo(Version.v1_19)) {
+            return plugin -> null;
+        }
         return plugin -> new ReflectionCommodore(plugin);
     }
 
