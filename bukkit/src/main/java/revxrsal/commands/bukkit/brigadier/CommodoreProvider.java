@@ -55,7 +55,7 @@ public final class CommodoreProvider {
             }
         }
         if (Version.getServerVersion().isNewerThanOrEqualTo(Version.v1_19)) {
-            return plugin -> null;
+            return null;
         }
         return plugin -> new ReflectionCommodore(plugin);
     }
